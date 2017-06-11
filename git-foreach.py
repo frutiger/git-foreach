@@ -1,24 +1,33 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import argparse
 import glob
 import multiprocessing
 import subprocess
 import os
+import sys
 
-def build_subcommand(git_dir, bare_repos, command):
-    subcommand = ['git', '--git-dir=' + git_dir]
-    if not bare_repos:
-        work_tree = os.path.join(git_dir, '..')
-        subcommand.append('--work-tree=' + work_tree)
-    subcommand.extend(command)
-    return subcommand
+def build_command(command, git_dir, work_tree=None):
+    result = ['git', '--git-dir=' + git_dir]
+    if work_tree:
+        result.append('--work-tree=' + work_tree)
+    result.extend(command)
+    return result
 
-def build_subcommands(pattern, bare_repos, command):
-    subcommands = []
-    for git_dir in glob.glob(pattern):
-        subcommands.append(build_subcommand(git_dir, bare_repos, command))
-    return subcommands
+def build_jobs(pattern, bare_repos, command):
+    jobs = []
+    for match in glob.glob(pattern):
+        if bare_repos:
+            command_args = build_command(command, match),
+        else:
+            command_args = build_command(command, match + '/.git', match)
+        jobs.append({
+            'dir':     match,
+            'command': command_args,
+        })
+    return jobs
 
 def get_executor(jobs):
     if jobs != 0:
@@ -38,13 +47,11 @@ def build_argparser():
     return parser
 
 def main():
-    args        = build_argparser().parse_args()
-    subcommands = build_subcommands(args.pattern,
-                                    args.bare_repos,
-                                    args.command)
-    executor    = get_executor(args.jobs)
+    args     = build_argparser().parse_args()
+    jobs     = build_jobs(args.pattern, args.bare_repos, args.command)
+    executor = get_executor(args.jobs)
 
-    executor(subprocess.call, subcommands)
+    executor(subprocess.call, jobs)
 
 if __name__ == '__main__':
     main()
