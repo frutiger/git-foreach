@@ -38,6 +38,7 @@ def get_executor(jobs):
 def build_argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--bare-repos', action='store_true')
+    parser.add_argument('-q', '--quiet', action='store_true')
     parser.add_argument('-j', '--jobs', type=int,
                                         default=multiprocessing.cpu_count())
     parser.add_argument('pattern', metavar='PATTERN', type=str)
@@ -51,7 +52,12 @@ def main():
     jobs     = build_jobs(args.pattern, args.bare_repos, args.command)
     executor = get_executor(args.jobs)
 
-    executor(subprocess.call, jobs)
+    results = executor(subprocess.check_output, (job['command'] for job in jobs))
+    for job, result in zip(jobs, results):
+        if not args.quiet:
+            print(job['dir'])
+        if result != '':
+            print(result)
 
 if __name__ == '__main__':
     main()
