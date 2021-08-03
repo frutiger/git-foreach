@@ -1,4 +1,4 @@
-##git-foreach - parallelize git commands
+## git-foreach - parallelize git commands
 
 ### SYNOPSIS
 
