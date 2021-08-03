@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
+#!/usr/bin/env python3
 
 import argparse
 import glob
@@ -57,7 +55,7 @@ def main():
         if not args.quiet:
             print(job['dir'])
         if result != '':
-            print(result)
+            print(result.decode('ascii'), end='')
 
 if __name__ == '__main__':
     main()
