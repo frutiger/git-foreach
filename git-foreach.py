@@ -45,12 +45,18 @@ def build_argparser():
 
     return parser
 
+def runner(command):
+    try:
+        return subprocess.check_output(command)
+    except:
+        return ""
+
 def main():
     args     = build_argparser().parse_args()
     jobs     = build_jobs(args.pattern, args.bare_repos, args.command)
     executor = get_executor(args.jobs)
 
-    results = executor(subprocess.check_output, (job['command'] for job in jobs))
+    results = executor(runner, (job['command'] for job in jobs))
     for job, result in zip(jobs, results):
         if not args.quiet:
             print(job['dir'])
